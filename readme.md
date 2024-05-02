@@ -1,9 +1,16 @@
-# Read Me First
-The following was discovered as part of building this project:
+# Spring Security Architecture
 
-* The original package name 'com.example.auth-service' is invalid and this project uses 'com.example.authservice' instead.
+![img.png](img.png)
 
-# Getting Started
+- When the request from the user accesses our application, AuthenticationFilter takes the username and password from the request and an object is created.
+- Using the created Authentication Object comes to Authentication Manager after the filter. The created object contains Granted Authority, Roles and Principal information. Authentication Manager is an interface and the authentication method is run. Authentication Manager is an interface and sends data to the Authentication Provider.
+- It informs the Authentication Provider which type of verification will be performed in authentication transactions.
+- Authentication Provider has different providers such as LdapAuthenticationProvider, CasAuthenticationProvider, DaoAuthenticationProvider. Authentication Provider selects the most suitable provider.
+- The Authentication Provider calls the User Details Service and retrieves the user information for the corresponding user. Using the service, it retrieves the User Object corresponding to the username.
+- In the User Details Service, it accesses the corresponding in-memory or database or from whatever sources it needs to access by looking at information such as the loadUserByUsername method (whether the account is locked or active, whether the credentials have expired) and brings the incoming user information it finds and if the correct user is used. If found and returns the object of the found user. This service includes Password Encoder, which verifies the user password. Password Encoder is the interface that tells the user password to be encoded and decrypted.
+- Security Context contains information about the authenticated user. We can use this user information throughout our application thanks to SecurityContextHolder.
+- When an unauthenticated user is encountered, an Authentication Exception is thrown.
+- The authenticated user is kept in the Security Context within our application. When the user who has logged in later requests access again, Security Context decides whether to log in or not. If the user information is available in the Security Context, there will be no need to log in again.
 
 ### Reference Documentation
 For further reference, please consider the following sections:
@@ -102,3 +109,9 @@ response:
 ```
 Hello from secured url
 ```
+
+### REF
+- [Multiple Authentication - Spring Security](https://medium.com/@fatih.yurdagul/spring-security-multiple-authentication-81e2c8b8ba13)
+- [Spring Security - Temel Kavramlar](https://medium.com/@fatih.yurdagul/spring-security-authentication-ve-temel-kavramlar-350afbe45ef7)
+- [Spring Security - Mimari](https://blog.burakkutbay.com/spring-security-mimarisi-akisi.html/)
+- [Spring Security - Auth](https://erayerdem.medium.com/spring-security-i%CC%87le-authentication-ve-authorization-1-5d88ef208ebc)
