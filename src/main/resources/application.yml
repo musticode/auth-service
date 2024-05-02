@@ -1,0 +1,19 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: AUTH-SERVICE
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/auth_service_db
+    username: username
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
