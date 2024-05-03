@@ -11,6 +11,7 @@ import com.example.authservice.repository.TokenRepository;
 import com.example.authservice.repository.UserRepository;
 import com.example.authservice.service.AuthenticationService;
 import com.example.authservice.service.TokenService;
+import com.example.authservice.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,14 +30,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final UserServiceImpl userService;
 
-    public AuthenticationServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, TokenService tokenService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+    public AuthenticationServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, TokenService tokenService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, UserServiceImpl userService) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.tokenService = tokenService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
 
@@ -70,7 +73,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-        User user = userRepository.findByUsername(request.getUsername()).orElseThrow(()-> new UserNotFoundException("User not found"));
+        User user = userService.findUserWithUsername(request.getUsername());
+
         String jwt = jwtService.generateToken(user);
 
         tokenService.revokeAllTokenByUser(user);
