@@ -8,4 +8,6 @@ public interface AuthenticationService {
     AuthenticationResponse register(UserCreateRequest request);
 
     AuthenticationResponse authenticate(LoginRequest request);
+
+    String logout();
 }

@@ -12,6 +12,7 @@ import com.example.authservice.repository.UserRepository;
 import com.example.authservice.service.AuthenticationService;
 import com.example.authservice.service.TokenService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -80,5 +81,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .token(jwt)
                 .message("User is logged in")
                 .build();
+    }
+
+    @Override
+    public String logout() {
+
+        return null;
     }
 }
