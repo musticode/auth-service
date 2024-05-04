@@ -43,22 +43,48 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: username
       ME_CONFIG_BASICAUTH_PASSWORD: password
 
-  cache:
-    image: redis:6.2-alpine
+
+  redis:
+    image: redis:latest
     restart: always
     ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
-    volumes:
-      - cache:/data
-
+      - "6379:6379"
+#    volumes:
+#      - /path/to/local/dаta:/root/redis
+#      - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+#  redis-master:
+#    image: 'bitnami/redis:latest'
+#    ports:
+#      - '6379'
+#    environment:
+#      - REDIS_REPLICATION_MODE=master
+#      - REDIS_PASSWORD=my_master_password
+##    volumes:
+##      - '/path/to/redis-persistence:/bitnami'
+#
+#  redis-replica:
+#    image: 'bitnami/redis:latest'
+#    ports:
+#      - '6379'
+#    depends_on:
+#      - redis-master
+#    environment:
+#      - REDIS_REPLICATION_MODE=slave
+#      - REDIS_MASTER_HOST=redis-master
+#      - REDIS_MASTER_PORT_NUMBER=6379
+#      - REDIS_MASTER_PASSWORD=my_master_password
+#      - REDIS_PASSWORD=my_replica_password
 
 volumes:
   my-data:
   postgres:
   pgadmin:
-  cache:
-    driver: local
+#  cache:
+#    driver: local
 
 networks:
   postgres:

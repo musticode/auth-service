@@ -110,6 +110,28 @@ response:
 Hello from secured url
 ```
 
+
+# REDIS
+compose yml: 
+```
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+#    volumes:
+#      - /path/to/local/dаta:/root/redis
+#      - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+```
+- [Link](https://zomro.com/blog/faq/301-kak-ustanovit-redis-v-docker)
+
+
+
+
 ### REF
 - [Multiple Authentication - Spring Security](https://medium.com/@fatih.yurdagul/spring-security-multiple-authentication-81e2c8b8ba13)
 - [Spring Security - Temel Kavramlar](https://medium.com/@fatih.yurdagul/spring-security-authentication-ve-temel-kavramlar-350afbe45ef7)

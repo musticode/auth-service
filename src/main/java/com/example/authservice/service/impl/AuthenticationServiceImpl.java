@@ -13,11 +13,18 @@ import com.example.authservice.service.AuthenticationService;
 import com.example.authservice.service.TokenService;
 import com.example.authservice.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -31,8 +38,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final UserServiceImpl userService;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final CacheTokenService cacheTokenService;
 
-    public AuthenticationServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, TokenService tokenService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, UserServiceImpl userService) {
+    public AuthenticationServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, TokenService tokenService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, UserServiceImpl userService, StringRedisTemplate stringRedisTemplate, RedisTemplate<String, Object> redisTemplate, CacheTokenService cacheTokenService/*, RedisTemplate<String, Object> redisTemplate*/) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.tokenService = tokenService;
@@ -40,6 +50,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
+//        this.redisTemplate = redisTemplate;
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.redisTemplate = redisTemplate;
+        this.cacheTokenService = cacheTokenService;
     }
 
 
@@ -70,26 +84,78 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse authenticate(LoginRequest request) {
+//        /**
+//         * username üzerinden user var mı diye bak
+//         * user varsa cache de jwt var mı diye bak
+//         * cache varsa ordan al
+//         * cache'de yoksa yeni token yarat, cache'e at
+//         * */
+//
+//        User foundUser = userService.findUserWithUsername(request.getUsername());
+//        if (foundUser.isCredentialsNonExpired()){
+//            final String cachedToken = cacheTokenService.getCachedToken(request.getUsername());
+//            if (!cachedToken.isEmpty()){
+//                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+//            }else {
+//                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+//                final String jwt = jwtService.generateToken(foundUser);
+//                cacheToken(request.getUsername(), jwt);
+//            }
+//        }
+//
+
+
+//        final String cachedToken = getCachedToken(request.getUsername());
+//        if (cachedToken.isEmpty()){
+//            cacheToken(request.getUsername(), jwtService.generateToken(user));
+//        }
+
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-
         User user = userService.findUserWithUsername(request.getUsername());
-
         String jwt = jwtService.generateToken(user);
-
         tokenService.revokeAllTokenByUser(user);
         tokenService.saveUserToken(jwt, user);
 
+//        cacheToken(request.getUsername(), jwt);
+//        String cached = getCachedToken(request.getUsername());
+//        System.out.println("caccccheeddd  "  + cached);
+//
+//
+//        saveData(request.getUsername(), jwt);
+//        log.info("tstttt : {}", getData(request.getUsername()));
 
         return AuthenticationResponse.builder()
                 .token(jwt)
                 .message("User is logged in")
                 .build();
+
+        //     @Cacheable(cacheNames = "movie", key = "'movie#' + #id")
     }
 
     @Override
     public String logout() {
 
         return null;
+    }
+
+
+    private void cacheToken(String username, String token) {
+        // Cache the token in Redis with a TTL (e.g., 60 minutes)
+        stringRedisTemplate.opsForValue().set("token:" + username, token, Duration.ofMinutes(60));
+    }
+
+    private String getCachedToken(String username) {
+        // Retrieve the token from Redis cache
+        return stringRedisTemplate.opsForValue().get("token:" + username);
+    }
+
+
+    public void saveData(String key, Object data) {
+        redisTemplate.opsForValue().set(key, data);
+    }
+
+    public Object getData(String key) {
+        return redisTemplate.opsForValue().get(key);
     }
 }
