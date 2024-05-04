@@ -11,8 +11,11 @@ import java.time.Duration;
 @Slf4j
 public class CacheTokenService {
 
+    public static final Duration CACHE_DURATION = Duration.ofSeconds(30);
+
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisTemplate<String, Object> redisTemplate;
+
 
 
     public CacheTokenService(StringRedisTemplate stringRedisTemplate, RedisTemplate<String, Object> redisTemplate) {
@@ -34,7 +37,7 @@ public class CacheTokenService {
     public void cacheToken(String username, String token) {
         // Cache the token in Redis with a TTL (e.g., 60 minutes)
         if (!username.isEmpty() || !username.isBlank()){
-            stringRedisTemplate.opsForValue().set("token:" + username, token, Duration.ofMinutes(60));
+            stringRedisTemplate.opsForValue().set("token:" + username, token, CACHE_DURATION);
             log.info("Username : {} , token : {}", username, token);
         }
         log.info("Username empty or null");

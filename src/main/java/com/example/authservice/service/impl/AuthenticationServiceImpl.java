@@ -91,18 +91,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //         * cache'de yoksa yeni token yarat, cache'e at
 //         * */
 //
-//        User foundUser = userService.findUserWithUsername(request.getUsername());
-//        if (foundUser.isCredentialsNonExpired()){
-//            final String cachedToken = cacheTokenService.getCachedToken(request.getUsername());
-//            if (!cachedToken.isEmpty()){
-//                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-//            }else {
-//                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-//                final String jwt = jwtService.generateToken(foundUser);
-//                cacheToken(request.getUsername(), jwt);
-//            }
-//        }
-//
+        String  jwt = "";
+        User foundUser = userService.findUserWithUsername(request.getUsername());
+        if (foundUser.isCredentialsNonExpired()){
+            final String cachedToken = cacheTokenService.getCachedToken(request.getUsername());
+
+            if (cachedToken != null){
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+                jwt = cacheTokenService.getCachedToken(request.getUsername());
+                log.info("Cached token : {}", jwt);
+            }else {
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+                jwt = jwtService.generateToken(foundUser);
+                cacheTokenService.cacheToken(request.getUsername(), jwt);
+            }
+        }
+
 
 
 //        final String cachedToken = getCachedToken(request.getUsername());
@@ -111,11 +115,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //        }
 
 
+        /*
+        // authentication without cache
+
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         User user = userService.findUserWithUsername(request.getUsername());
         String jwt = jwtService.generateToken(user);
         tokenService.revokeAllTokenByUser(user);
         tokenService.saveUserToken(jwt, user);
+         */
+
+
 
 //        cacheToken(request.getUsername(), jwt);
 //        String cached = getCachedToken(request.getUsername());
@@ -130,32 +140,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .message("User is logged in")
                 .build();
 
-        //     @Cacheable(cacheNames = "movie", key = "'movie#' + #id")
     }
 
     @Override
     public String logout() {
-
         return null;
     }
 
-
-    private void cacheToken(String username, String token) {
-        // Cache the token in Redis with a TTL (e.g., 60 minutes)
-        stringRedisTemplate.opsForValue().set("token:" + username, token, Duration.ofMinutes(60));
-    }
-
-    private String getCachedToken(String username) {
-        // Retrieve the token from Redis cache
-        return stringRedisTemplate.opsForValue().get("token:" + username);
-    }
-
-
-    public void saveData(String key, Object data) {
-        redisTemplate.opsForValue().set(key, data);
-    }
-
-    public Object getData(String key) {
-        return redisTemplate.opsForValue().get(key);
-    }
 }
