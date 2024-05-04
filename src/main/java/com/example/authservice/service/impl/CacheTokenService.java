@@ -1,8 +1,10 @@
 package com.example.authservice.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.geo.Point;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.domain.geo.GeoLocation;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -23,6 +25,8 @@ public class CacheTokenService {
         this.redisTemplate = redisTemplate;
     }
 
+    public void saveGeo(){
+    }
 
     public void saveData(String key, Object data) {
         redisTemplate.opsForValue().set(key, data);

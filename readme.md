@@ -111,7 +111,8 @@ Hello from secured url
 ```
 
 
-# REDIS
+# Redis Configuration
+
 compose yml: 
 ```
   redis:
@@ -128,6 +129,131 @@ compose yml:
       - REDIS_DATABASES=16
 ```
 - [Link](https://zomro.com/blog/faq/301-kak-ustanovit-redis-v-docker)
+
+### Redis Config
+
+```
+@Configuration
+@EnableCaching
+@Slf4j
+public class RedisConfig {
+
+    @Value("${spring.cache.redis.host}")
+    private String redisHost;
+
+    @Value("${spring.cache.redis.port}")
+    private int redisPort;
+
+    @Bean
+    public LettuceConnectionFactory redisConnectionFactory() {
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(redisHost, redisPort);
+        configuration.setPassword("my-password");
+        log.info("Connected to : {} {}", redisHost, redisPort);
+
+
+        return new LettuceConnectionFactory(configuration);
+    }
+
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        return RedisCacheManager.create(connectionFactory);
+    }
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(){
+        final RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new GenericToStringSerializer<Object>(Object.class));
+        redisTemplate.setHashValueSerializer(new JdkSerializationRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        return redisTemplate;
+    }
+}
+```
+
+### Redis Template in service
+
+```
+
+@Service
+@Slf4j
+public class CacheTokenService {
+
+    public static final Duration CACHE_DURATION = Duration.ofSeconds(30);
+
+    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    public CacheTokenService(StringRedisTemplate stringRedisTemplate, RedisTemplate<String, Object> redisTemplate) {
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.redisTemplate = redisTemplate;
+    }
+
+    public void saveData(String key, Object data) {
+        redisTemplate.opsForValue().set(key, data);
+    }
+
+    public Object getData(String key) {
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    public void cacheToken(String username, String token) {
+        // Cache the token in Redis with a TTL (e.g., 60 minutes)
+        if (!username.isEmpty() || !username.isBlank()){
+            stringRedisTemplate.opsForValue().set("token:" + username, token, CACHE_DURATION);
+            log.info("Username : {} , token : {}", username, token);
+        }
+        log.info("Username empty or null");
+    }
+
+    public String getCachedToken(String username) {
+        // Retrieve the token from Redis cache
+        return stringRedisTemplate.opsForValue().get("token:" + username);
+    }
+
+}
+```
+
+#### Usage:
+
+```
+cacheTokenService.cacheToken(request.getUsername(), jwt);
+cacheTokenService.getCachedToken(request.getUsername());
+```
+
+#### Redis Template 
+
+```
+    final Logger logger = LoggerFactory.getLogger(UserRepository.class);
+    private HashOperations hashOperations;
+    
+    public UserRepository(RedisTemplate redisTemplate) {
+        this.hashOperations = redisTemplate.opsForHash();
+    }
+    
+    public void create(User user) {
+        hashOperations.put("USER", user.getUserId(), user);
+        logger.info(String.format("User with ID %s saved", user.getUserId()));
+    }
+    
+    public User get(String userId) {
+        return (User) hashOperations.get("USER", userId);
+    }
+
+    public Map<String, User> getAll(){
+        return hashOperations.entries("USER");
+    }
+    
+    public void update(User user) {
+        hashOperations.put("USER", user.getUserId(), user);
+        logger.info(String.format("User with ID %s updated", user.getUserId()));
+    }
+    
+    public void delete(String userId) {
+        hashOperations.delete("USER", userId);
+        logger.info(String.format("User with ID %s deleted", userId));
+    }
+```
 
 # Cache Yazı
 - https://musticode.gitbook.io/springboot-configurations
