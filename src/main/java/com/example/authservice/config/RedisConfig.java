@@ -1,6 +1,7 @@
 package com.example.authservice.config;
 
 import com.example.authservice.constant.CacheConstant;
+import com.example.authservice.service.event.RedisMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
@@ -14,6 +15,9 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.*;
 
 import java.time.Duration;
@@ -28,6 +32,13 @@ public class RedisConfig {
 
     @Value("${spring.cache.redis.port}")
     private int redisPort;
+
+
+    private final RedisMessageHandler redisMessageHandler;
+
+    public RedisConfig(RedisMessageHandler redisMessageHandler) {
+        this.redisMessageHandler = redisMessageHandler;
+    }
 
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
@@ -54,7 +65,23 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+    @Bean
+    public ChannelTopic channelTopic(){
+        return new ChannelTopic("channel_topic");
+    }
 
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerContainer(){
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(redisConnectionFactory());
+        container.addMessageListener(messageListener(), channelTopic());
+        return container;
+    }
+
+    @Bean
+    public MessageListenerAdapter messageListener( ) {
+        return new MessageListenerAdapter(redisMessageHandler);
+    }
 
 //    @Bean
 //    public RedisConnectionFactory redisConnectionFactory(){

@@ -266,3 +266,31 @@ cacheTokenService.getCachedToken(request.getUsername());
 - [Spring Security - Mimari](https://blog.burakkutbay.com/spring-security-mimarisi-akisi.html/)
 - [Spring Security - Auth](https://erayerdem.medium.com/spring-security-i%CC%87le-authentication-ve-authorization-1-5d88ef208ebc)
 
+## Redis - Redis Insight docker compose
+
+```
+version: '3.8'
+services:
+
+  redis:
+    container_name: redis
+    image: redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+
+  redis-insight:
+    image: redislabs/redisinsight
+    container_name: redis-insight
+    ports:
+      - 8001:8001
+```
+
+- [Reacive Redis](https://blog.devgenius.io/spring-reactive-redis-messaging-0cff238e159c)
+
+## PUB/SUB Messaging
+
+- https://www.baeldung.com/spring-data-redis-pub-sub
+- https://www.youtube.com/watch?v=hr8IaQphWFA&ab_channel=Jskool
+- https://medium.com/@bhanuchaddha/using-redis-pub-sub-with-spring-boot-ea0d7a8c27af
+- 

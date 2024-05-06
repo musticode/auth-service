@@ -12,6 +12,7 @@ import com.example.authservice.repository.UserRepository;
 import com.example.authservice.service.AuthenticationService;
 import com.example.authservice.service.TokenService;
 import com.example.authservice.service.UserService;
+import com.example.authservice.service.event.RedisMessagePublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,6 +26,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+
+import static com.example.authservice.service.event.RedisMessageHandler.messageList;
 
 @Service
 @Slf4j
@@ -41,8 +44,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisTemplate<String, Object> redisTemplate;
     private final CacheTokenService cacheTokenService;
+    private final RedisMessagePublisher redisMessagePublisher;
 
-    public AuthenticationServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, TokenService tokenService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, UserServiceImpl userService, StringRedisTemplate stringRedisTemplate, RedisTemplate<String, Object> redisTemplate, CacheTokenService cacheTokenService/*, RedisTemplate<String, Object> redisTemplate*/) {
+    public AuthenticationServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, TokenService tokenService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, UserServiceImpl userService, StringRedisTemplate stringRedisTemplate, RedisTemplate<String, Object> redisTemplate, CacheTokenService cacheTokenService, RedisMessagePublisher redisMessagePublisher/*, RedisTemplate<String, Object> redisTemplate*/) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.tokenService = tokenService;
@@ -54,6 +58,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.stringRedisTemplate = stringRedisTemplate;
         this.redisTemplate = redisTemplate;
         this.cacheTokenService = cacheTokenService;
+        this.redisMessagePublisher = redisMessagePublisher;
     }
 
 
@@ -135,6 +140,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //        saveData(request.getUsername(), jwt);
 //        log.info("tstttt : {}", getData(request.getUsername()));
 
+        redisMessagePublisher.publish("DÜRRRÜKKK");
+        messageList.forEach(System.out::println);
         return AuthenticationResponse.builder()
                 .token(jwt)
                 .message("User is logged in")
