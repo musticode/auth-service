@@ -52,5 +52,10 @@ public class CacheTokenService {
         return stringRedisTemplate.opsForValue().get("token:" + username);
     }
 
+    public void removeCachedToken(String username){
+        redisTemplate.opsForValue().getAndDelete("token:"+username);
+        log.info("Deleted value : {}", username);
+    }
+
 
 }

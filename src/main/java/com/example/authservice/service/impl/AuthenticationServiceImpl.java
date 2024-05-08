@@ -6,6 +6,7 @@ import com.example.authservice.dto.UserCreateRequest;
 import com.example.authservice.exception.user.UserAlreadyExistsException;
 import com.example.authservice.exception.user.UserNotFoundException;
 import com.example.authservice.model.Role;
+import com.example.authservice.model.Token;
 import com.example.authservice.model.User;
 import com.example.authservice.repository.TokenRepository;
 import com.example.authservice.repository.UserRepository;
@@ -25,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static com.example.authservice.service.event.RedisMessageHandler.messageList;
@@ -151,6 +153,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public String logout() {
+
+        // user'ı bul
+        // user'ın status'ünü logged out true olarak kaydet
+        // user'ın authentication'unu sil
+        // user'ın token'ını cache'den sil
+        // token'ı sil
+        // Bearer'ı kabul etme
+
+        User user = userService.findUserWithUsername("testUser");
+        List<Token> tokens = user.getTokens();
+        tokens.forEach(token -> {
+            if (!token.isLoggedOut()){
+                token.setLoggedOut(true);
+            }
+        });
+
+        cacheTokenService.removeCachedToken(user.getUsername());
+
         return null;
     }
 
