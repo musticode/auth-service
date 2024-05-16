@@ -2,6 +2,7 @@ package com.example.authservice.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Point;
+import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.domain.geo.GeoLocation;
@@ -26,6 +27,9 @@ public class CacheTokenService {
     }
 
     public void saveGeo(){
+        redisTemplate
+                .opsForGeo()
+                .add("key", new RedisGeoCommands.GeoLocation<>("ankara",new Point(12, 12)));
     }
 
     public void saveData(String key, Object data) {
